@@ -38,6 +38,43 @@ float max(float a, float b){
 }
 
 /*****************************************
+ * Initiate obstacles
+ *****************************************/
+
+void initObstacles() {
+	// Circles
+	point center;
+	center.x = 30; center.y = 30;
+	new_circle(&circleObstacles[0], center, 3);
+
+	center.x = 60; center.y = 12;
+	new_circle(&circleObstacles[1], center, 3);
+
+	center.x = 66; center.y = 39;
+	new_circle(&circleObstacles[2], center, 3);
+
+	// Rectangles
+	point corners[4];
+	corners[0].x = 0; corners[0].y = 24;
+	corners[1].x = 22; corners[1].y = 14;
+	corners[2].x = 24; corners[2].y = 20;
+	corners[3].x = 2; corners[3].y = 30;
+	new_rect(&rectObstacles[0], corners);
+
+	corners[0].x = 33; corners[0].y = 18;
+	corners[1].x = 37; corners[1].y = 13;
+	corners[2].x = 55; corners[2].y = 28;
+	corners[3].x = 52; corners[3].y = 33;
+	new_rect(&rectObstacles[1], corners);
+
+	corners[0].x = 78; corners[0].y = 24;
+	corners[1].x = 72; corners[1].y = 27;
+	corners[2].x = 84; corners[2].y = 48;
+	corners[3].x = 90; corners[3].y = 46;
+	new_rect(&rectObstacles[2], corners);
+}
+
+/*****************************************
  * Complete this function so that it
  * continuously updates the robot's position
  *****************************************/
@@ -160,22 +197,8 @@ task main()
   motor[motorB] = 0;
 	motor[motorC] = 0;
 
-	point corners[4];
-	corners[0].x = 0; corners[0].y = 24;
-	corners[1].x = 22; corners[1].y = 14;
-	corners[2].x = 24; corners[2].y = 20;
-	corners[3].x = 2; corners[3].y = 30;
-	new_rect(&rectObstacles[0], corners[0], corners[1], corners[2], corners[3]);
-	corners[0].x = 33; corners[0].y = 18;
-	corners[1].x = 37; corners[1].y = 13;
-	corners[2].x = 55; corners[2].y = 28;
-	corners[3].x = 52; corners[3].y = 33;
-	new_rect(&rectObstacles[1], corners[0], corners[1], corners[2], corners[3]);
-	corners[0].x = 78; corners[0].y = 24;
-	corners[1].x = 72; corners[1].y = 27;
-	corners[2].x = 84; corners[2].y = 48;
-	corners[3].x = 90; corners[3].y = 46;
-	new_rect(&rectObstacles[2], corners[0], corners[1], corners[2], corners[3]);
+	initObstacles();
+
 	nxtDisplayTextLine(0,"(%.1f, %.1f)", rectObstacles[0].corners[0].x, rectObstacles[0].corners[0].y);
 	nxtDisplayTextLine(1,"(%.1f, %.1f)", rectObstacles[0].corners[1].x, rectObstacles[0].corners[1].y);
 	nxtDisplayTextLine(2,"(%.1f, %.1f)", rectObstacles[0].corners[2].x, rectObstacles[0].corners[2].y);
