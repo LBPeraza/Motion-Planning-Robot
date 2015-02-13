@@ -22,6 +22,11 @@ typedef struct coord {
 	float y;
 } point;
 
+typedef ubyte index_t;
+
+#define INDEX_ROW(i) = i & 0xf;
+#define INDEX_COL(i) = (i >> 4);
+
 #define MAPWIDTH 96
 #define MAPHEIGHT 48
 
@@ -136,16 +141,14 @@ void placeCircle(int x, int y, int radius) {
 	if (0 <= x && x < MAPWIDTH &&
 			0 <= y && y < MAPHEIGHT)
 		map[y][x] = 1;
-	//for (int r = 1; r <= radius + ROBOTR; r++) {
 	int r = radius + ROBOTR;
-		for (int i = 0; i < points; i+=2) {
-			x2 = x + r * cosDegrees(i);
-			y2 = y + r * sinDegrees(i);
-			if (0 <= x2 && x2 < MAPWIDTH &&
-					0 <= y2 && y2 < MAPHEIGHT)
-				map[y2][x2] = 1;
-		}
-	//}
+	for (int i = 0; i < points; i += 5) {
+		x2 = x + r * cosDegrees(i);
+		y2 = y + r * sinDegrees(i);
+		if (0 <= x2 && x2 < MAPWIDTH &&
+				0 <= y2 && y2 < MAPHEIGHT)
+			map[y2][x2] = 1;
+	}
 }
 
 void placeRect(point p1, point p2, point p3, point p4) {
@@ -200,6 +203,42 @@ void initMap() {
 	placeRect(p1, p2, p3, p4);
 }
 
+void surround(const int r, const int c, const int x) {
+	if (0 <= r-1 && map[r-1][c] == 0)
+		map[r-1][c] = x;
+	if (r+1 < MAPHEIGHT && map[r+1][c] == 0)
+		map[r+1][c] = x;
+	if (0 <= c-1 && map[r][c-1] == 0)
+		map[r][c-1] = x;
+	if (c+1 < MAPWIDTH && map[r][c+1] == 0)
+		map[r][c+1] = x;
+	/*
+	for (int r = i-1; r <= i+1; r++) {
+		for (int c = j-1; c <= j+1; c++) {
+			if (0 <= r && r < MAPHEIGHT &&
+					0 <= c && c < MAPWIDTH &&
+					map[r][c] == 0)
+				map[r][c] = x;
+		}
+	}
+	*/
+}
+
+void wave(point s, point e) {
+	int cur = 2;
+	map[e.y][e.x] = cur;
+	while (map[s.y][s.x] == 0) {
+		for (int i = 0; i < MAPHEIGHT; i++) {
+			for (int j = 0; j < MAPWIDTH; j++) {
+				if (map[i][j] == cur) {
+					surround(i, j, cur+1);
+				}
+			}
+		}
+		cur++;
+	}
+}
+
 void drawMap() {
 	int i, j;
 	for (i = 0; i < MAPHEIGHT; i++) {
@@ -250,7 +289,16 @@ task main()
 		kp = K;
 
 	initMap();
-	drawMap();
+	//drawMap();
+	displayTextLine(0, "Map generated");
+	point s, e;
+	s.x = 6; s.y = 6;
+	e.x = 90; e.y = 30;
+	int t = nPgmTime;
+	wave(s, e);
+	int t2 = nPgmTime;
+	displayTextLine(1, "Wave done");
+	displayTextLine(2, "%0.2fs", (t2-t)/1000.0);
 
 	if(SOUND_ON){
 		startTask(speedSounds);
