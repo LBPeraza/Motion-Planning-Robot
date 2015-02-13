@@ -6,6 +6,7 @@
 #define SOUND_ON 0
 #define CHOOSE_K 0
 
+#define ROBOTR 3
 #define R 2.76
 #define PETAL_L 13.05
 #define L 12.7
@@ -21,25 +22,18 @@ typedef struct coord {
 	float y;
 } point;
 
-void trajectory (int traj, float t, point *p);
+#define MAPWIDTH 96
+#define MAPHEIGHT 48
+
+ubyte map[MAPHEIGHT][MAPWIDTH];
 
 //Global variables - you will need to change some of these
 float robot_TH = 0.0;
-int tn;
 point robot_c, marker_c, marker_d;
 float marker_vd, marker_wd;
 int oldL = 0, oldR = 0, oldT = 0;
 int velocityUpdateInterval = 20;
 int PIDUpdateInterval = 2;
-
-float points[numPoints][2] = {{3.5, 10.2}, {5.0,6.8}, {8.8,5.8}, {11.7,7.2}, {12.7,10.7}, {11.0, 13.9}, {7.0,17.7}, {4.3,20.2},
-		{3.5,22.5}, {6.6,22.3}, {9.5,22.3},{12.2,22.3}, {13.8,21.3}, {13.5,19.4}, {14.8,18.6}, {15.4,14.6}, {16.7,12.5}, {17.9,11.2},
-		{20.8,10.6}, {20.8,10.0}, {19.8,9.3},{19.7,5.3}, {20.7,4.7}, {21.5,4.4}, {21.5,3.1}, {25.1,3.1}, {25.1,4.4}, {27.2,4.7}, {26.8,5.9},
-		{27.5,9.5}, {26.1,9.9}, {26.1,10.7},{28.7,11.4}, {30.9,13.4}, {32.0,16.1}, {32.5,17.9}, {32.0,18.5}, {33.2,19.5}, {33.1,21.3},
-		{32.1,20.0}, {31.0,19.6}, {30.5,20.5},{30.7,21.7}, {29.5,20.9}, {29.4,19.6}, {30.0,18.5}, {29.0,18.9}, {29.0,21.4}, {28.8,24.8},
-		{28.9,27.7}, {28.8,29.3}, {26.0,29.4},{23.7,29.4}, {23.9,26.2}, {23.8,24.3}, {22.9,24.1}, {23.2,26.5}, {23.1,29.2}, {20.4,29.7},
-		{18.0,29.3}, {17.8,25.9}, {18.0,23.0},{18.1,20.6}, {18.1,19.0}, {17.3,18.2}, {16.9,18.9}, {17.4,20.2}, {16.4,21.7}, {16.4,20.3},
-		{15.9,19.8}, {14.8,19.7}, {14.2,21.2},{13.8,21.3}};
 
 float kp;
 float l;
@@ -100,7 +94,7 @@ task trajectory_task()
 		marker_c.x = robot_c.x + F * cos(robot_TH);
 		marker_c.y = robot_c.y + F * sin(robot_TH);
 
-		trajectory(tn, t, marker_d);
+		// trajectory(tn, t, marker_d);
 
 		float xErr = marker_d.x - marker_c.x;
 		float yErr = marker_d.y - marker_c.y;
@@ -131,219 +125,95 @@ task trajectory_task()
 	}
 }
 
-/*****************************************
- * Trajectories - these functions define
- * the sample trajectories
- *****************************************/
+/****************************************
+ * Initializing map
+ * place obstacles and determine config. space
+ ****************************************/
 
-float clamp (float x, float minimum, float maximum)
-{
-	if (x < minimum)
-		return minimum;
-	else if (x > maximum)
-		return maximum;
-	else
-		return x;
+void placeCircle(int x, int y, int radius) {
+	int points = 360;
+	int x2, y2;
+	if (0 <= x && x < MAPWIDTH &&
+			0 <= y && y < MAPHEIGHT)
+		map[y][x] = 1;
+	//for (int r = 1; r <= radius + ROBOTR; r++) {
+	int r = radius + ROBOTR;
+		for (int i = 0; i < points; i+=2) {
+			x2 = x + r * cosDegrees(i);
+			y2 = y + r * sinDegrees(i);
+			if (0 <= x2 && x2 < MAPWIDTH &&
+					0 <= y2 && y2 < MAPHEIGHT)
+				map[y2][x2] = 1;
+		}
+	//}
 }
 
-void traj1 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*20);
-	p->x = 0.5 * cos(t/10.0) * sin(t/10.0) * 100;
-	p->y = 0.2 * sin(t/10.0) * sin(t/5.0) * 100;
-}
-
-void traj2 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*10);
-	p->x = 0.2 * sin(3*t/5) * 100;
-	p->y = 0.2 * cos(2*(t/5 + PI/4)) * 100;
-}
-
-void traj3 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*20);
-	p->x = 0.2 * cos(t/10) * cos(t/5) * 100;
-	p->y = 0.2 * cos(3*t/10) * sin(t/10) * 100;
-}
-
-void traj4 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*20);
-	p->x = 0.2 * (0.5 * cos(3*t/10) - 0.75 * cos(t/5)) * 100;
-	p->y = 0.2 * (-0.75 * sin(t/5) - 0.5 * sin(3*t/10)) * 100;
-}
-
-void traj5 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*20);
-	float c = cos(t/5);
-	p->x = 0.1 * (-2*c*c - sin(t/10) + 1) * sin(t/5) * 100;
-	p->y = 0.1 * c *(-2*c*c*c - sin(t/10) + 1) * 100;
-}
-
-void traj6 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*24);
-	float c = cos(t/12);
-	float s = sin(t/4);
-	p->x = 0.1 * (2*c*c*c + 1)*s * 100;
-	p->y = 0.1 * cos(t/4) * (1 - 2*s*s*s*s) * 100;
-}
-
-void traj7 (float t, point *p)
-{
-	t = clamp(t, 0.0, PI*40);
-	p->x = 0.04 * (5*cos(9*t/20) - 4*cos(t/4)) * 100;
-	p->y = 0.04 * (-4*sin(t/4) - 5*sin(9*t/20)) * 100;
-}
-
-void traj8 (float t, point *p)
-{
-	float tScale = 1.6;
-	t = clamp(t, 0.0, (float)(numPoints-1) * tScale);
-
-		int t0 = floor(t / tScale);
-		int t1 = ceil(t/ tScale);
-		float scale = (t/tScale) - t0;
-		p->x = (1-scale)*points[t0][0] + scale*points[t1][0];
-		p->y = (1-scale)*points[t0][1] + scale*points[t1][1];
-		p->y = 40.0 - p->y;
-
-		p->x = p->x * tScale;
-		p->y = p->y * tScale;
-}
-
-void traj9 (float t, point *p)
-{
-	t = clamp(t / 1.2, 0.0, 39.1);
-	float x, y;
-	if (t <= 6.0) {
-		float r = 4.0 * log10(t/2.0 + 1);
-		x = r * sin(t/2.0);
-		y = r * cos(t/2.0);
-	} else if (t <= 7.45) {
-		t -= 6.0;
-		t += 3.05;
-		x = 0.2 * cos(2.5 * t) + 0.27;
-		y = -0.2 * sin(2.5 * t) - 2.2;
-	} else if (t <= 9.95) {
-		t -= 7.45;
-		t = t / 2.0 - 1.8;
-		float r = 0.76 + (t + 1.8)*(t+1.8);
-		x = r * cos(t) + 0.5;
-		y = r * sin(t) - 1.27;
-	} else if (t <= 15.19) {
-		t -= 9.95;
-		x = 0.5 * cos(1.2*t - PI/2) + 2.5;
-		y = 0.5 * sin(1.2*t - PI/2) - 1.98;
-	} else if (t <= 16.499) {
-		t -= 15.19;
-		x = cos(1.2*t - PI/2) + 2.5;
-		y = -0.7 * sin(1.2*t - PI/2) - 3.18;
-	} else if (t <= 19.639) {
-		t -= 16.499;
-		x = 0.15 * cos(t) + 3.35;
-		y = -sin(t) - 3.18;
-	} else if (t <= 26.339) {
-		t -= 19.639;
-		x = 0.3 * cos(t/2.5) + 2.9;
-		y = -2.0 * sin(t/2.5) - 3.18;
-	} else if (t <= 27.91) {
-		t -= 26.339;
-		x = 0.125*cos(2.0*t) + 2.5;
-		y = 0.1 * sin(2.0*t) - 4.06;
-	} else if (t <= 34.61) {
-		t -= 27.91;
-		x = -0.3 * cos(t/2.5 - 2.68) + 2.1;
-		y = 2.0 * sin(t/2.5 - 2.68) - 3.18;
-	} else if (t <= 37.75) {
-		t -= 34.61;
-		x = 0.15 * cos(t) + 1.65;
-		y = -sin(t) - 3.18;
-	} else {
-		t -= 37.75;
-		x = cos(1.2*t - PI) + 2.5;
-		y = -0.7 * sin(1.2*t - PI) - 3.18;
+void placeRect(point p1, point p2, point p3, point p4) {
+	const int res1 = 3;
+	const int res2 = 16;
+	int x, y;
+	for (int i = 0; i < res1; i++) {
+		x = (p2.x - p1.x) * i / res1 + p1.x;
+		y = (p2.y - p1.y) * i / res1 + p1.y;
+		placeCircle(x, y, 0);
+		x = (p4.x - p3.x) * i / res1 + p3.x;
+		y = (p4.y - p3.y) * i / res1 + p3.y;
+		placeCircle(x, y, 0);
 	}
-	p->x = x*8;
-	p->y = y*8;
-}
-
-void trajectory (int traj, float t, point *p)
-{
-	switch (traj) {
-		case 0:
-			traj1(t, p);
-			break;
-		case 1:
-			traj2(t, p);
-			break;
-		case 2:
-			traj3(t, p);
-			break;
-		case 3:
-			traj4(t, p);
-			break;
-		case 4:
-			traj5(t, p);
-			break;
-		case 5:
-			traj6(t, p);
-			break;
-		case 6:
-			traj7(t, p);
-			break;
-		case 7:
-		  traj8(t, p);
-		  break;
-		case 8:
-			traj9(t, p);
-			break;
+	for (int i = 0; i < res2; i++) {
+		x = (p3.x - p2.x) * i / res2 + p2.x;
+		y = (p3.y - p2.y) * i / res2 + p2.y;
+		placeCircle(x, y, 0);
+		x = (p1.x - p4.x) * i / res2 + p4.x;
+		y = (p1.y - p4.y) * i / res2 + p4.y;
+		placeCircle(x, y, 0);
 	}
 }
 
-/*****************************************
- * get_trajectory - determine trajectory
- * to follow
- *****************************************/
+void initMap() {
+	// zero-initialize map
+	int i, j;
+	for (i = 0; i < MAPHEIGHT; i++)
+		for (j = 0; j < MAPWIDTH; j++)
+			map[i][j] = 0;
+	// place obstacles
+	int r = 3;
+	placeCircle(30, 30, r);
+	placeCircle(60, 12, r);
+	placeCircle(66, 39, r);
 
- int get_trajectory ()
- {
-   int traj = 0;
-   int traj_count = 9;
-   while (nNxtButtonPressed != kEnterButton)
-   {
-     displayTextLine(0, "Trajectory %d", (traj+1));
-     if (nNxtButtonPressed == kLeftButton)
-       traj--;
-     else if (nNxtButtonPressed == kRightButton)
-       traj++;
-
-     if (traj < 0)
-       traj = traj_count - 1;
-     else if (traj > traj_count - 1)
-       traj = 0;
-
-     wait1Msec(150);
-   }
-   return traj;
- }
-
- float get_kp() {
-   float k = 0.0;
-	 nMotorEncoder[motorA] = 0;
-	 nNxtButtonTask = 0;
-   while(nNxtButtonPressed != kEnterButton) {
-			k = nMotorEncoder[motorA] / 5.0;
-			displayTextLine(0, "k = %f", k);
-			wait10Msec(1);
-	 }
-	 nMotorEncoder[motorA] = 0;
-	 wait10Msec(30);
-	 return k;
+	point p1, p2, p3, p4;
+	p1.x = 0; p1.y = 24;
+	p2.x = 2; p2.y = 30;
+	p3.x = 24; p3.y = 20;
+	p4.x = 22; p4.y = 14;
+	placeRect(p1, p2, p3, p4);
+	p1.x = 33; p1.y = 18;
+	p2.x = 37; p2.y = 13;
+	p3.x = 55; p3.y = 28;
+	p4.x = 52; p4.y = 33;
+	placeRect(p1, p2, p3, p4);
+	p1.x = 78; p1.y = 24;
+	p2.x = 72; p2.y = 27;
+	p3.x = 84; p3.y = 48;
+	p4.x = 90; p4.y = 46;
+	placeRect(p1, p2, p3, p4);
 }
 
+void drawMap() {
+	int i, j;
+	for (i = 0; i < MAPHEIGHT; i++) {
+		for (j = 0; j < MAPWIDTH; j++) {
+			if (map[i][j] == 1) {
+				setPixel(j, i);
+			}
+		}
+	}
+}
+
+/*******
+ * lol
+ *******/
 
 task speedSounds(){
 	while(1){
@@ -374,29 +244,14 @@ task main()
 	motor[motorC] = 0;
 	nNxtButtonTask  = 0;
 
-	tn = get_trajectory();
-
-	if (tn == 6)
-		l = PETAL_L;
-	else
-		l = L;
-
-	for (int i = 0; i < 7; i++) {
-		nxtDisplayClearTextLine(i);
-	}
-
-	wait1Msec(500);
-
 	if (CHOOSE_K)
 		kp = get_kp();
 	else
 		kp = K;
 
-	trajectory(tn, 0.0, marker_c);
-	robot_c.x = marker_c.x - F;
-	robot_c.y = marker_c.y;
+	initMap();
+	drawMap();
 
-	startTask(trajectory_task);
 	if(SOUND_ON){
 		startTask(speedSounds);
 	}
