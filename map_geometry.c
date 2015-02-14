@@ -52,7 +52,7 @@ void new_rect(rect *r, point *ps) {
 		norm.y = (c0.x - c1.x) / dist;
 		norm.x = (c1.y - c0.y) / dist;
 
-		nxtDisplayTextLine(i+4,"(%.1f, %.1f)", norm.x, norm.y);
+		//nxtDisplayTextLine(i+4,"(%.1f, %.1f)", norm.x, norm.y);
 
 	  r->corners[i].x += norm.x * ROBOTR;
 	  r->corners[i].y += norm.y * ROBOTR;
@@ -62,23 +62,20 @@ void new_rect(rect *r, point *ps) {
 }
 
 void draw_rect(rect r) {
-	const int res1 = 6;
-	const int res2 = 24;
+	const int res = 100;
 	int x, y;
-	for (int i = 0; i <= res1; i++) {
-		x = (r.corners[1].x - r.corners[0].x) * i / res1 + r.corners[0].x;
-		y = (r.corners[1].y - r.corners[0].y) * i / res1 + r.corners[0].x;
+	for (int i = 0; i <= res; i++) {
+		x = (r.corners[1].x - r.corners[0].x) * i / res + r.corners[0].x;
+		y = (r.corners[1].y - r.corners[0].y) * i / res + r.corners[0].x;
 		setPixel(x, y);
-		x = (r.corners[3].x - r.corners[2].x) * i / res1 + r.corners[2].x;
-		y = (r.corners[3].y - r.corners[2].y) * i / res1 + r.corners[2].y;
+		x = (r.corners[3].x - r.corners[2].x) * i / res + r.corners[2].x;
+		y = (r.corners[3].y - r.corners[2].y) * i / res + r.corners[2].y;
 		setPixel(x, y);
-	}
-	for (int i = 0; i <= res2; i++) {
-		x = (r.corners[2].x - r.corners[1].x) * i / res2 + r.corners[1].x;
-		y = (r.corners[2].y - r.corners[1].y) * i / res2 + r.corners[1].y;
+		x = (r.corners[2].x - r.corners[1].x) * i / res + r.corners[1].x;
+		y = (r.corners[2].y - r.corners[1].y) * i / res + r.corners[1].y;
 		setPixel(x, y);
-		x = (r.corners[0].x - r.corners[3].x) * i / res2 + r.corners[3].x;
-		y = (r.corners[0].y - r.corners[3].x) * i / res2 + r.corners[3].y;
+		x = (r.corners[0].x - r.corners[3].x) * i / res + r.corners[3].x;
+		y = (r.corners[0].y - r.corners[3].x) * i / res + r.corners[3].y;
 		setPixel(x, y);
 	}
 }

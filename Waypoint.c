@@ -17,6 +17,9 @@
 #define PI 3.1415926536
 #define numPoints 73
 
+#define MAPWIDTH 96
+#define MAPHEIGHT 48
+
 //Global variables - you will need to change some of these
 float robot_TH = 0.0;
 point robot_c, marker_c, marker_d;
@@ -28,7 +31,7 @@ int PIDUpdateInterval = 2;
 float kp;
 float l;
 
-rect rectObstacles[3];
+rect rectObstacles[7]; // 3 rectangles and the outer walls
 circle circleObstacles[3];
 
 float max(float a, float b){
@@ -68,10 +71,35 @@ void initObstacles() {
 	new_rect(&rectObstacles[1], corners);
 
 	corners[0].x = 78; corners[0].y = 24;
-	corners[1].x = 72; corners[1].y = 27;
+	corners[1].x = 90; corners[1].y = 46;
 	corners[2].x = 84; corners[2].y = 48;
-	corners[3].x = 90; corners[3].y = 46;
+	corners[3].x = 72; corners[3].y = 27;
 	new_rect(&rectObstacles[2], corners);
+
+	// Walls
+	corners[0].x = -1; corners[0].y = 0;
+	corners[1].x = 0; corners[1].y = 0;
+	corners[2].x = 0; corners[2].y = MAPHEIGHT;
+	corners[3].x = -1; corners[3].y = MAPHEIGHT;
+	new_rect(&rectObstacles[3], corners);
+
+	corners[0].x = 0; corners[0].y = -1;
+	corners[1].x = MAPWIDTH; corners[1].y = -1;
+	corners[2].x = MAPWIDTH; corners[2].y = 0;
+	corners[3].x = 0; corners[3].y = 0;
+	new_rect(&rectObstacles[4], corners);
+
+	corners[0].x = MAPWIDTH; corners[0].y = 0;
+	corners[1].x = MAPWIDTH+1; corners[1].y = 0;
+	corners[2].x = MAPWIDTH+1; corners[2].y = MAPHEIGHT;
+	corners[3].x = MAPWIDTH; corners[3].y = MAPHEIGHT;
+	new_rect(&rectObstacles[5], corners);
+
+	corners[0].x = 0; corners[0].y = MAPHEIGHT;
+	corners[1].x = MAPWIDTH; corners[1].y = MAPHEIGHT;
+	corners[2].x = MAPWIDTH; corners[2].y = MAPHEIGHT+1;
+	corners[3].x = 0; corners[3].y = MAPHEIGHT+1;
+	new_rect(&rectObstacles[6], corners);
 }
 
 /*****************************************
@@ -199,13 +227,17 @@ task main()
 
 	initObstacles();
 
+	drawRect(0, 48, 96, 0);
 	for (int i = 0; i < 3; i++) {
 		draw_circle(circleObstacles[i]);
 	}
-
+	for (int i = 0; i < 7; i++) {
+		draw_rect(rectObstacles[i]);
+	}
+	/*
 	nxtDisplayTextLine(0,"(%.1f, %.1f)", rectObstacles[0].corners[0].x, rectObstacles[0].corners[0].y);
 	nxtDisplayTextLine(1,"(%.1f, %.1f)", rectObstacles[0].corners[1].x, rectObstacles[0].corners[1].y);
 	nxtDisplayTextLine(2,"(%.1f, %.1f)", rectObstacles[0].corners[2].x, rectObstacles[0].corners[2].y);
-	nxtDisplayTextLine(3,"(%.1f, %.1f)", rectObstacles[0].corners[3].x, rectObstacles[0].corners[3].y);
+	nxtDisplayTextLine(3,"(%.1f, %.1f)", rectObstacles[0].corners[3].x, rectObstacles[0].corners[3].y);*/
 	while(1){}
 }
