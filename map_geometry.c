@@ -113,3 +113,44 @@ bool segment_intersect(point s1, point e1, point s2, point e2){
 
 	return false;
 }
+
+bool rectangle_intersect(point p1, point p2, rect r){
+	for(int i = 0; i<4; i++){
+		if(segment_intersect(p1, p2, r.corners[i], r.corners[(i+1)%4]))
+			return true;
+	}
+	return false;
+}
+
+bool circle_intersect(point p1, point p2, circle c){
+	vector segDir, circDir;
+	segDir.x = p2.x - p1.x;
+	segDir.y = p2.y - p1.y;
+	circDir.x = c.c.x - p1.x;
+	circDir.y = c.c.y - p1.y;
+
+	vector projection;
+	float segMag = sqrt(pow(p2.x-p1.x,2) + pow(p2.y-p1.y,2));
+	projection.x = circDir.x*segDir.x / segMag;
+	projection.y = circDir.y*segDir.y / segMag;
+
+	float projLen = sqrt(pow(projection.x-p1.x,2) + pow(projection.y-p1.y,2));
+	point closest;
+	if(projLen < 0){
+		closest.x = p1.x;
+		closest.y = p1.y;
+	}
+	else if(projLen > segMag){
+		closest.x = p2.x;
+		closest.y = p2.y;
+	}
+	else{
+		closest.x = p1.x + projection.x;
+		closest.y = p1.y + projection.y;
+	}
+
+	if(sqrt(pow(c.c.x-closest.x,2) + pow(c.c.y-closest.y,2)) <= c.r){
+		return true;
+	}
+	return false;
+}
