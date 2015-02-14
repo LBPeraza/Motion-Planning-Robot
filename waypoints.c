@@ -37,7 +37,7 @@ void initWaypoint() {
 	}
 }
 
-int new_waypoint(float x, float y, int wp) {
+int new_waypoint(const float x, const float y, const int wp) {
 	if (wp < WPCOUNT && !waypoint_defined[wp]) {
 		waypoints[wp].x = x;
 		waypoints[wp].y = y;
@@ -47,7 +47,7 @@ int new_waypoint(float x, float y, int wp) {
 	return -1;
 }
 
-float dist(waypoint wp1, waypoint wp2) {
+float dist(const waypoint wp1, const waypoint wp2) {
 	float xdiff, ydiff;
 	xdiff = wp1.x - wp2.x;
 	ydiff = wp1.y - wp2.y;
@@ -75,7 +75,7 @@ int connect_waypoints() {
 	return edge_count;
 }
 
-bool waypoint_location(point *p, int wp) {
+bool waypoint_location(point *p, const int wp) {
 	if (waypoint_defined[wp]) {
 		p->x = waypoints[wp].x;
 		p->y = waypoints[wp].y;
@@ -98,6 +98,59 @@ int closest_waypoint(point p) {
 		}
 	}
 	return minInd;
+}
+
+int min_score(const float *scores, const int *indices, const int count) {
+	float min_score = -1.0;
+	int index = -1;
+	for (int i = 0; i < count; i++) {
+		if (index == -1 || scores[indices[i]] < min_score) {
+			min_score = scores[indices[i]];
+			index = i;
+		}
+	}
+	return index;
+}
+
+int get_neighbors(int *buf, const int wp) {
+	for (int i = 0; i < WPCOUNT; i++)
+		buf[i] = -1;
+	if (!waypoint_defined[wp])
+		return 0;
+	int count = 0;
+	for (int i = 0; i < WPCOUNT; i++)
+		if (waypoint_defined[i] && i != wp &&	edges[wp][i] >= 0.0)
+			buf[count++] = i;
+	return count;
+}
+
+int get_path(int *path, const int wps, const int wpe) {
+	float scores[WPCOUNT];
+	for (int i = 0; i < WPCOUNT; i++)
+		scores[i] = -1.0;
+	scores[wpe] = 0.0;
+	int buf[WPCOUNT];
+	int n;
+	while (scores[wps] < 0.0) {
+		for (int i = 0; i < WPCOUNT; i++) {
+			if (waypoint_defined[i] && scores[i] >= 0.0) {
+				float score = scores[i];
+				n = get_neighbors(buf, i);
+				for (int j = 0; j < n; j++) {
+					scores[buf[j]] = score + edges[i][buf[j]];
+				}
+			}
+		}
+	}
+	int i = wps;
+	int count = 0;
+	while (i != wpe) {
+		path[count++] = i;
+		n = get_neighbors(buf, i);
+		i = min_score(scores, buf, n);
+	}
+	path[count++] = i;
+	return count;
 }
 
 void draw_paths() {
