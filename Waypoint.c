@@ -20,7 +20,6 @@
 #define MAPWIDTH 96
 #define MAPHEIGHT 48
 
-//Global variables - you will need to change some of these
 float robot_TH = 0.0;
 point robot_c, marker_c, marker_d;
 float marker_vd, marker_wd;
@@ -234,10 +233,5 @@ task main()
 	for (int i = 0; i < 7; i++) {
 		draw_rect(rectObstacles[i]);
 	}
-	/*
-	nxtDisplayTextLine(0,"(%.1f, %.1f)", rectObstacles[0].corners[0].x, rectObstacles[0].corners[0].y);
-	nxtDisplayTextLine(1,"(%.1f, %.1f)", rectObstacles[0].corners[1].x, rectObstacles[0].corners[1].y);
-	nxtDisplayTextLine(2,"(%.1f, %.1f)", rectObstacles[0].corners[2].x, rectObstacles[0].corners[2].y);
-	nxtDisplayTextLine(3,"(%.1f, %.1f)", rectObstacles[0].corners[3].x, rectObstacles[0].corners[3].y);*/
 	while(1){}
 }
