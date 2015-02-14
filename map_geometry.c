@@ -78,3 +78,25 @@ void draw_rect(rect r) {
 		setPixel(x, y);
 	}
 }
+
+
+bool segment_intersect(point s1, point e1, point s2, point e2){
+	float x00 = s1.x;
+	float y00 = s1.y;
+	float x10 = s2.x;
+	float y10 = s2.y;
+	float x01 = e1.x - s1.x;
+	float y01 = e1.y - s1.y;
+	float x11 = e2.x - s2.x;
+	float y11 = e2.y - s2.y;
+
+	float det = x11*y01 - x01*y11;
+
+	float s = 1/det * ((x00-x10)*y01 - (y00-y10)*x01);
+	float t = 1/det * -(-(x00-x10)*y11 + (y00-y10)*x11);
+
+	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
+		return true;
+
+	return false;
+}
