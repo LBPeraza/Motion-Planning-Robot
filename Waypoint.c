@@ -198,11 +198,6 @@ task trajectory_task()
 	}
 }
 
-/*****************************************
- * Trajectories - these functions define
- * the sample trajectories
- *****************************************/
-
 float clamp (float x, float minimum, float maximum)
 {
 	if (x < minimum)
@@ -258,8 +253,8 @@ task closeWaypoint() {
 		rightEnc = nMotorEncoder[RightMotor];
 		int xdiff = leftEnc - oldL;
 		int ydiff = rightEnc - oldR;
-		c.x += xdiff;
-		c.y += ydiff;
+		c.x += xdiff/5;
+		c.y += ydiff/5;
 		displayTextLine(0, "%d, %d", c.x, c.y);
 		int cw = closest_waypoint(c);
 		if (cw >= 0) {
@@ -299,7 +294,8 @@ task main()
 	if (SOUND_ON)
 		startTask(speedSounds);
 
-	startTask(closeWaypoint);
-
+	//startTask(closeWaypoint);
+	int path[6];
+	int pathLen = get_path(path,0,5);
 	while(nNxtButtonPressed != kExitButton) {}
 }

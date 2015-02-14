@@ -46,7 +46,7 @@ void new_rect(rect *r, point *ps) {
 		r->corners[i].y = corners[i].y;
 	}
 	for(int i = 0; i<4; i++){
-		point c0, c1, c2;
+		point c0, c1;
 		c0.x = corners[i].x;
 		c0.y = corners[i].y;
 		c1.x = corners[(i+1)%4].x;

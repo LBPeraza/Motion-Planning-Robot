@@ -106,7 +106,7 @@ int min_score(const float *scores, const int *indices, const int count) {
 	for (int i = 0; i < count; i++) {
 		if (index == -1 || scores[indices[i]] < min_score) {
 			min_score = scores[indices[i]];
-			index = i;
+			index = indices[i];
 		}
 	}
 	return index;
@@ -125,6 +125,9 @@ int get_neighbors(int *buf, const int wp) {
 }
 
 int get_path(int *path, const int wps, const int wpe) {
+	if(!waypoint_defined[wps] || !waypoint_defined[wpe]){
+		return -1;
+	}
 	float scores[WPCOUNT];
 	for (int i = 0; i < WPCOUNT; i++)
 		scores[i] = -1.0;
@@ -137,7 +140,10 @@ int get_path(int *path, const int wps, const int wpe) {
 				float score = scores[i];
 				n = get_neighbors(buf, i);
 				for (int j = 0; j < n; j++) {
-					scores[buf[j]] = score + edges[i][buf[j]];
+					float newScore = score + edges[i][buf[j]];
+					if(scores[buf[j]] < 0 || newScore < scores[buf[j]]){
+						scores[buf[j]] = newScore;
+					}
 				}
 			}
 		}
