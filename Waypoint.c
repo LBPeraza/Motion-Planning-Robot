@@ -11,21 +11,23 @@
 #define SOUND_ON 0
 #define CHOOSE_K 0
 
-#define R 2.76
-#define L 12.7
-#define F 7.3
+#define R 1.08
+#define L 4.48
+#define F -2.0
 
 #define K 7.0
 
 #define PI 3.1415926536
-#define numPoints 73
 
 #define MAPWIDTH 96
 #define MAPHEIGHT 48
 
+#define TIME 25.0
+
+
 float robot_TH = 0.0;
-point robot_c, marker_c, marker_d;
-float marker_vd, marker_wd;
+point robot_c, ref_c, ref_d;
+float ref_vd, ref_wd;
 int oldL = 0, oldR = 0, oldT;
 int velocityUpdateInterval = 20;
 int PIDUpdateInterval = 2;
@@ -33,9 +35,6 @@ int PIDUpdateInterval = 2;
 int path[WPCOUNT];
 int pathLen = -1;
 point Start, Goal;
-
-float kp;
-float l;
 
 float max(float a, float b){
 	if(a > b)
@@ -108,6 +107,29 @@ void initObstacles() {
 /*****************************************
  * Initiate waypoints
  *****************************************/
+void updateDesired(float t){
+	float percent = t/TIME;
+	float dist_d = percent * totalDist;
+	float dis = 0.0;
+	int cur = 0;
+	while(cur!= pathLen-1 && dis + edges[path[cur]][path[cur+1]] < dist_d){
+		dis += edges[path[cur]][path[cur+1]];
+		cur++;
+	}
+	if(cur == pathLen -1){
+		point a;
+		waypoint_location(&a, path[cur]);
+		ref_d.x = a.x;
+		ref_d.y = a.y;
+		return;
+	}
+	float weight = (dist_d - dis) / (edges[path[cur]][path[cur+1]]);
+	point a, b;
+	waypoint_location(&a, path[cur]);
+	waypoint_location(&b, path[cur+1]);
+	ref_d.x = a.x * (1.0 - weight) + b.x * weight;
+	ref_d.y = a.y * (1.0 - weight) + b.y * weight;
+}
 
 void initWaypoints(point s, point e) {
 	initWaypoint();
@@ -144,6 +166,7 @@ task trajectory_task()
 		int rightEnc = nMotorEncoder[RightMotor];
 		float dt = (curTime - oldT) / 1000.0;
 		t += dt;
+		updateDesired(t);
 		if(dt == 0.0){
 			continue;
 		}
@@ -153,7 +176,7 @@ task trajectory_task()
 
 		float v = (vr + vl) / 2.0;
 
-		float w = (vr - vl) / l;
+		float w = (vr - vl) / L;
 
 		float k00 = v*cos(robot_TH);
 		float k01 = v*sin(robot_TH);
@@ -172,30 +195,30 @@ task trajectory_task()
 		robot_c.y += dt/6.0 * (k01 + 2*(k11 + k21) + k31);
 		robot_TH += dt/6.0 * (k02 + 2*(k12 + k22) + k32);
 
-		marker_c.x = robot_c.x + F * cos(robot_TH);
-		marker_c.y = robot_c.y + F * sin(robot_TH);
+		ref_c.x = robot_c.x + F * cos(robot_TH);
+		ref_c.y = robot_c.y + F * sin(robot_TH);
 
-		float xErr = marker_d.x - marker_c.x;
-		float yErr = marker_d.y - marker_c.y;
+		float xErr = ref_d.x - ref_c.x;
+		float yErr = ref_d.y - ref_c.y;
 
-		marker_vd = kp*(xErr*cos(robot_TH) + yErr*sin(robot_TH));
-		marker_wd = kp*(xErr * -sin(robot_TH)/F + yErr * cos(robot_TH)/F);
+		ref_vd = K*(xErr*cos(robot_TH) + yErr*sin(robot_TH));
+		ref_wd = K*(xErr * -sin(robot_TH)/F + yErr * cos(robot_TH)/F);
 
-		float vld = 90.0 / PI * (2.0*marker_vd - L*marker_wd) / R;
-		float vrd = 90.0 / PI * (2.0*marker_vd + L*marker_wd) / R;
+		float vld = 90.0 / PI * (2.0*ref_vd - L*ref_wd) / R;
+		float vrd = 90.0 / PI * (2.0*ref_vd + L*ref_wd) / R;
 
 		motor[motorB] = 0.1 * vld;
 		motor[motorC] = 0.1 * vrd;
 
 		//Code that plots the robot's current position and also prints it out as text
-		setPixel(50 + (int)(100.0 * marker_c.x), 32 + (int)(100.0 * marker_c.y));
-		displayTextLine(0, "X: %f", marker_c.x);
-		displayTextLine(1, "Y: %f", marker_c.y);
-		displayTextLine(2, "xd: %f", marker_d.x);
-		displayTextLine(3, "yd: %f", marker_d.y);
+		displayTextLine(0, "X: %f", ref_c.x);
+		displayTextLine(1, "Y: %f", ref_c.y);
+		displayTextLine(2, "xd: %f", ref_d.x);
+		displayTextLine(3, "yd: %f", ref_d.y);
 		displayTextLine(4, "t: %f", robot_TH * 180.0 / PI);
 		displayTextLine(5, "x: %f", xErr);
 		displayTextLine(6, "y: %f", yErr);
+		displayTextLine(6, "time: %f", t);
 
 		wait1Msec(velocityUpdateInterval);
 		oldL = leftEnc;
@@ -244,65 +267,20 @@ void drawMap() {
 	}
 }
 
-task closeWaypoint() {
-	int path[WPCOUNT];
-	int pathLen = -1;
-	int leftEnc = nMotorEncoder[LeftMotor];
-	int rightEnc = nMotorEncoder[RightMotor];
-	int oldL = leftEnc;
-	int oldR = rightEnc;
-	point c;
-	c.x = 6; c.y = 6;
-	point e;
-	e.x = 12; e.y = 42;
-	while (1) {
-		//eraseLine(c.x, c.y, e.x, e.y);
-		leftEnc = nMotorEncoder[LeftMotor];
-		rightEnc = nMotorEncoder[RightMotor];
-		int xdiff = leftEnc - oldL;
-		int ydiff = rightEnc - oldR;
-		c.x += xdiff/5;
-		c.y += ydiff/5;
-		displayTextLine(0, "%d, %d", c.x, c.y);
-		for(int i = 0; i<pathLen-1; i++){
-			point a, b;
-			waypoint_location(&a, path[i]);
-			waypoint_location(&b, path[i+1]);
-			eraseLine(a.x, a.y, b.x, b.y);
-		}
-		initWaypoints(c, e);
-		//int cw = closest_waypoint(c);
-		//if (cw >= 0) {
-		//	if (waypoint_location(&e, cw)) {
-				//drawLine(c.x, c.y, e.x, e.y);
-		//	}
-		//}
-		pathLen = get_path(path,6,7);
-		for(int i = 0; i<pathLen-1; i++){
-			point a, b;
-			waypoint_location(&a, path[i]);
-			waypoint_location(&b, path[i+1]);
-			drawLine(a.x, a.y, b.x, b.y);
-		}
-		oldL = leftEnc;
-		oldR = rightEnc;
-		wait1Msec(50);
-	}
-}
-
-task getInput() {
+void getInput() {
 	int leftEnc = nMotorEncoder[LeftMotor];
 	int oldL = leftEnc;
 	int buttonCount = 0;
-	int inputs[4];
-	for(int i = 0; i<4; i++){
+	int inputs[5];
+	for(int i = 0; i<5; i++){
 		inputs[i] = 0;
 	}
-	while (buttonCount < 4) {
+	string prompts[5] = {"Start x:", "Start y:", "Start theta:", "Goal x:", "Goal y:"};
+	while (buttonCount < 5) {
 		leftEnc = nMotorEncoder[LeftMotor];
 		int diff = (leftEnc - oldL)/5;
 		inputs[buttonCount] += diff;
-		displayTextLine(buttonCount, "%d", inputs[buttonCount]);
+		displayTextLine(buttonCount, "%s %d", prompts[buttonCount], inputs[buttonCount]);
 		if(nNxtButtonPressed == kEnterButton){
 			buttonCount++;
 			while(nNxtButtonPressed == kEnterButton){}
@@ -310,10 +288,22 @@ task getInput() {
 		oldL = leftEnc;
 		wait1Msec(50);
 	}
+	inputs[0] = 6;
+	inputs[1] = 6;
+	inputs[2] = 0;
+	inputs[3] = 12;
+	inputs[4] = 36;
 	Start.x = inputs[0];
 	Start.y = inputs[1];
-	Goal.x = inputs[2];
-	Goal.y = inputs[3];
+	ref_c.x = Start.x;
+	ref_c.y = Start.y;
+	ref_d.x = Start.x;
+	ref_d.y = Start.y;
+	robot_TH = inputs[2] * PI / 180.0;
+	robot_c.x = ref_c.x - F*cos(robot_TH);
+	robot_c.y = ref_c.y - F*sin(robot_TH);
+	Goal.x = inputs[3];
+	Goal.y = inputs[4];
 	initWaypoints(Start, Goal);
 	eraseDisplay();
 	pathLen = get_path(path,6,7);
@@ -347,15 +337,15 @@ task main()
 	motor[motorC] = 0;
 
 	initObstacles();
-	//initWaypoints();
 
 	clearExtraPixels();
 
 	if (SOUND_ON)
 		startTask(speedSounds);
 
-	startTask(getInput);
+	getInput();
+	while(nNxtButtonPressed != kEnterButton) {}
+	startTask(trajectory_task);
+
 	while(nNxtButtonPressed != kExitButton) {}
 }
-//0  1       3      2     4      5
-//0  30.07  61.21  72.03  81.46  123.46

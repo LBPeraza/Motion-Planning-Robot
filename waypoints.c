@@ -25,6 +25,8 @@ typedef point waypoint;
 
 #define WPCOUNT 8
 
+float totalDist = 0.0;
+
 bool waypoint_defined[WPCOUNT];
 float edges[WPCOUNT][WPCOUNT];
 waypoint waypoints[WPCOUNT];
@@ -175,6 +177,7 @@ int get_path(int *path, const int wps, const int wpe) {
 		i = parent[i];
 	}
 	path[count++] = i;
+	totalDist = scores[wps];
 	return count;
 }
 
