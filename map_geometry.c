@@ -78,3 +78,17 @@ void draw_rect(rect r) {
 		setPixel(x, y);
 	}
 }
+
+#ifndef MAIN
+
+#pragma config(Motor,  motorA,          InMotor,       tmotorNXT, PIDControl, encoder)
+#pragma config(Motor,  motorB,          LeftMotor,     tmotorNXT, PIDControl, encoder)
+#pragma config(Motor,  motorC,          RightMotor,    tmotorNXT, PIDControl, encoder)
+
+task main() {
+	motor[motorB] = 100;
+	motor[motorC] = -100;
+	while (1) {}
+}
+
+#endif
