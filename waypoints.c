@@ -23,7 +23,7 @@ bool safe_path(point wp1, point wp2) {
 
 typedef point waypoint;
 
-#define WPCOUNT 6
+#define WPCOUNT 8
 
 bool waypoint_defined[WPCOUNT];
 float edges[WPCOUNT][WPCOUNT];
@@ -38,7 +38,7 @@ void initWaypoint() {
 }
 
 int new_waypoint(const float x, const float y, const int wp) {
-	if (wp < WPCOUNT && !waypoint_defined[wp]) {
+	if (wp < WPCOUNT) {
 		waypoints[wp].x = x;
 		waypoints[wp].y = y;
 		waypoint_defined[wp] = true;
@@ -125,6 +125,9 @@ int get_neighbors(int *buf, const int wp) {
 }
 
 int get_path(int *path, const int wps, const int wpe) {
+	if(wps < 0 || wps >= WPCOUNT || wpe < 0 || wpe >= WPCOUNT){
+		return -1;
+	}
 	if(!waypoint_defined[wps] || !waypoint_defined[wpe]){
 		return -1;
 	}

@@ -105,7 +105,7 @@ void initObstacles() {
  * Initiate waypoints
  *****************************************/
 
-void initWaypoints() {
+void initWaypoints(point s, point e) {
 	initWaypoint();
 
 	new_waypoint(12, 6, 0);
@@ -114,10 +114,12 @@ void initWaypoints() {
 	new_waypoint(65, 25, 3);
 	new_waypoint(54, 42, 4);
 	new_waypoint(12, 42, 5);
+	new_waypoint(s.x, s.y, 6);
+	new_waypoint(e.x, e.y, 7);
 
 	connect_waypoints();
 
-	draw_paths();
+	//draw_paths();
 }
 
 /*****************************************
@@ -239,6 +241,8 @@ void drawMap() {
 }
 
 task closeWaypoint() {
+	int path[WPCOUNT];
+	int pathLen = -1;
 	int leftEnc = nMotorEncoder[LeftMotor];
 	int rightEnc = nMotorEncoder[RightMotor];
 	int oldL = leftEnc;
@@ -246,9 +250,9 @@ task closeWaypoint() {
 	point c;
 	c.x = 6; c.y = 6;
 	point e;
-	e.x = 6; e.y = 6;
+	e.x = 12; e.y = 42;
 	while (1) {
-		eraseLine(c.x, c.y, e.x, e.y);
+		//eraseLine(c.x, c.y, e.x, e.y);
 		leftEnc = nMotorEncoder[LeftMotor];
 		rightEnc = nMotorEncoder[RightMotor];
 		int xdiff = leftEnc - oldL;
@@ -256,11 +260,25 @@ task closeWaypoint() {
 		c.x += xdiff/5;
 		c.y += ydiff/5;
 		displayTextLine(0, "%d, %d", c.x, c.y);
-		int cw = closest_waypoint(c);
-		if (cw >= 0) {
-			if (waypoint_location(&e, cw)) {
-				drawLine(c.x, c.y, e.x, e.y);
-			}
+		for(int i = 0; i<pathLen-1; i++){
+			point a, b;
+			waypoint_location(&a, path[i]);
+			waypoint_location(&b, path[i+1]);
+			eraseLine(a.x, a.y, b.x, b.y);
+		}
+		initWaypoints(c, e);
+		//int cw = closest_waypoint(c);
+		//if (cw >= 0) {
+		//	if (waypoint_location(&e, cw)) {
+				//drawLine(c.x, c.y, e.x, e.y);
+		//	}
+		//}
+		pathLen = get_path(path,6,7);
+		for(int i = 0; i<pathLen-1; i++){
+			point a, b;
+			waypoint_location(&a, path[i]);
+			waypoint_location(&b, path[i+1]);
+			drawLine(a.x, a.y, b.x, b.y);
 		}
 		oldL = leftEnc;
 		oldR = rightEnc;
@@ -285,7 +303,7 @@ task main()
 	motor[motorC] = 0;
 
 	initObstacles();
-	initWaypoints();
+	//initWaypoints();
 
 	drawMap();
 
@@ -294,12 +312,7 @@ task main()
 	if (SOUND_ON)
 		startTask(speedSounds);
 
-	//startTask(closeWaypoint);
-	int path[6];
-	int pathLen = get_path(path,0,5);
-	for(int i = 0; i<pathLen; i++){
-		nxtDisplayTextLine(i, "%d", path[i]);
-	}
+	startTask(closeWaypoint);
 	while(nNxtButtonPressed != kExitButton) {}
 }
 //0  1       3      2     4      5
