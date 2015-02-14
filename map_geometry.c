@@ -131,10 +131,10 @@ bool circle_intersect(point p1, point p2, circle c){
 
 	vector projection;
 	float segMag = sqrt(pow(p2.x-p1.x,2) + pow(p2.y-p1.y,2));
-	projection.x = circDir.x*segDir.x / segMag;
-	projection.y = circDir.y*segDir.y / segMag;
 
-	float projLen = sqrt(pow(projection.x-p1.x,2) + pow(projection.y-p1.y,2));
+	float projLen = (circDir.x*segDir.x + circDir.y*segDir.y) / segMag;
+	projection.x = projLen * segDir.x / segMag;
+	projection.y = projLen * segDir.y / segMag;
 	point closest;
 	if(projLen < 0){
 		closest.x = p1.x;
