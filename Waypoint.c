@@ -109,7 +109,18 @@ void initObstacles() {
  *****************************************/
 
 void initWaypoints() {
-	initWaypointGraph();
+	initWaypoint();
+
+	new_waypoint(12, 6, 0);
+	new_waypoint(42, 4, 1);
+	new_waypoint(84, 4, 2);
+	new_waypoint(65, 25, 3);
+	new_waypoint(54, 42, 4);
+	new_waypoint(12, 42, 5);
+
+	connect_waypoints();
+
+	draw_paths();
 }
 
 /*****************************************
@@ -218,6 +229,15 @@ task speedSounds(){
 	}
 }
 
+void clearExtraPixels() {
+	for (int i = MAPHEIGHT; i < 64; i++)
+		for (int j = 0; j < 100; j++)
+			clearPixel(j, i);
+	for (int i = 0; i < 64; i++)
+		for (int j = MAPWIDTH; j < 100; j++)
+			clearPixel(j, i);
+}
+
 
 /*****************************************
  * Main function - it is not necessary to
@@ -245,6 +265,8 @@ task main()
 	for (int i = 0; i < 7; i++) {
 		draw_rect(rectObstacles[i]);
 	}
+
+	clearExtraPixels();
 
 	if (SOUND_ON)
 		startTask(speedSounds);

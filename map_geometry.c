@@ -1,4 +1,4 @@
-#define ROBOTR 4
+#define ROBOTR 3
 
 typedef struct coord {
 	float x;
@@ -23,11 +23,9 @@ void new_circle(circle *circ, point center, int radius) {
 }
 
 void draw_circle(circle circ) {
-	for (int a = 0; a < 360; a += 10) {
-		int x = circ.c.x + (int)(round(circ.r * cosDegrees(a)));
-		int y = circ.c.y + (int)(round(circ.r * sinDegrees(a)));
-		setPixel(x, y);
-	}
+	fillEllipse(circ.c.x - circ.r, circ.c.y + circ.r,
+							circ.c.x + circ.r, circ.c.y - circ.r);
+	// drawCircle(circ.c.x - circ.r, circ.c.y + circ.r, 2 * circ.r);
 }
 
 void new_rect(rect *r, point *ps) {
@@ -62,21 +60,20 @@ void new_rect(rect *r, point *ps) {
 
 void draw_rect(rect r) {
 	const int res = 100;
-	int x, y;
+	int sx, sy, ex, ey;
 	for (int i = 0; i <= res; i++) {
-		x = (r.corners[1].x - r.corners[0].x) * i / res + r.corners[0].x;
-		y = (r.corners[1].y - r.corners[0].y) * i / res + r.corners[0].y;
-		setPixel(x, y);
-		x = (r.corners[3].x - r.corners[2].x) * i / res + r.corners[2].x;
-		y = (r.corners[3].y - r.corners[2].y) * i / res + r.corners[2].y;
-		setPixel(x, y);
-		x = (r.corners[2].x - r.corners[1].x) * i / res + r.corners[1].x;
-		y = (r.corners[2].y - r.corners[1].y) * i / res + r.corners[1].y;
-		setPixel(x, y);
-		x = (r.corners[0].x - r.corners[3].x) * i / res + r.corners[3].x;
-		y = (r.corners[0].y - r.corners[3].y) * i / res + r.corners[3].y;
-		setPixel(x, y);
+		sx = (r.corners[1].x - r.corners[0].x) * i / res + r.corners[0].x;
+		sy = (r.corners[1].y - r.corners[0].y) * i / res + r.corners[0].y;
+		ex = (r.corners[2].x - r.corners[3].x) * i / res + r.corners[3].x;
+		ey = (r.corners[2].y - r.corners[3].y) * i / res + r.corners[3].y;
+		drawLine(sx, sy, ex, ey);
 	}
+	/*
+	drawLine(r.corners[0].x, r.corners[0].y, r.corners[1].x, r.corners[1].y);
+	drawLine(r.corners[1].x, r.corners[1].y, r.corners[2].x, r.corners[2].y);
+	drawLine(r.corners[2].x, r.corners[2].y, r.corners[3].x, r.corners[3].y);
+	drawLine(r.corners[3].x, r.corners[3].y, r.corners[0].x, r.corners[0].y);
+	*/
 }
 
 #ifndef MAIN
