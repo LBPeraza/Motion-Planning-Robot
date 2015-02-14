@@ -108,6 +108,9 @@ bool segment_intersect(point s1, point e1, point s2, point e2){
 
 	float det = x11*y01 - x01*y11;
 
+	if(det == 0)
+		return false;
+
 	float s = 1/det * ((x00-x10)*y01 - (y00-y10)*x01);
 	float t = 1/det * -(-(x00-x10)*y11 + (y00-y10)*x11);
 

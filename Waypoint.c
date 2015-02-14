@@ -30,6 +30,10 @@ int oldL = 0, oldR = 0, oldT;
 int velocityUpdateInterval = 20;
 int PIDUpdateInterval = 2;
 
+int path[WPCOUNT];
+int pathLen = -1;
+point Start, Goal;
+
 float kp;
 float l;
 
@@ -286,6 +290,46 @@ task closeWaypoint() {
 	}
 }
 
+task getInput() {
+	int leftEnc = nMotorEncoder[LeftMotor];
+	int oldL = leftEnc;
+	int buttonCount = 0;
+	int inputs[4];
+	for(int i = 0; i<4; i++){
+		inputs[i] = 0;
+	}
+	while (buttonCount < 4) {
+		leftEnc = nMotorEncoder[LeftMotor];
+		int diff = (leftEnc - oldL)/5;
+		inputs[buttonCount] += diff;
+		displayTextLine(buttonCount, "%d", inputs[buttonCount]);
+		if(nNxtButtonPressed == kEnterButton){
+			buttonCount++;
+			while(nNxtButtonPressed == kEnterButton){}
+		}
+		oldL = leftEnc;
+		wait1Msec(50);
+	}
+	Start.x = inputs[0];
+	Start.y = inputs[1];
+	Goal.x = inputs[2];
+	Goal.y = inputs[3];
+	initWaypoints(Start, Goal);
+	eraseDisplay();
+	pathLen = get_path(path,6,7);
+	if(pathLen < 0){
+		nxtDisplayTextLine(0,"Invalid!");
+		while(1){}
+	}
+	drawMap();
+	for(int i = 0; i<pathLen-1; i++){
+		point a, b;
+		waypoint_location(&a, path[i]);
+		waypoint_location(&b, path[i+1]);
+		drawLine(a.x, a.y, b.x, b.y);
+	}
+}
+
 /*****************************************
  * Main function - it is not necessary to
  * modify this
@@ -305,14 +349,12 @@ task main()
 	initObstacles();
 	//initWaypoints();
 
-	drawMap();
-
 	clearExtraPixels();
 
 	if (SOUND_ON)
 		startTask(speedSounds);
 
-	startTask(closeWaypoint);
+	startTask(getInput);
 	while(nNxtButtonPressed != kExitButton) {}
 }
 //0  1       3      2     4      5

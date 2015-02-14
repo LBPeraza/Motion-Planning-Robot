@@ -163,6 +163,8 @@ int get_path(int *path, const int wps, const int wpe) {
 				shortestInd = j;
 			}
 		}
+		if(shortestInd == -1 && current != wps)
+			return -1;
 		current = shortestInd;
 	}
 
