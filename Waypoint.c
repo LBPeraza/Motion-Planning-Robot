@@ -199,6 +199,10 @@ task main()
 
 	initObstacles();
 
+	for (int i = 0; i < 3; i++) {
+		draw_circle(circleObstacles[i]);
+	}
+
 	nxtDisplayTextLine(0,"(%.1f, %.1f)", rectObstacles[0].corners[0].x, rectObstacles[0].corners[0].y);
 	nxtDisplayTextLine(1,"(%.1f, %.1f)", rectObstacles[0].corners[1].x, rectObstacles[0].corners[1].y);
 	nxtDisplayTextLine(2,"(%.1f, %.1f)", rectObstacles[0].corners[2].x, rectObstacles[0].corners[2].y);

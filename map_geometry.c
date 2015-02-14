@@ -7,7 +7,7 @@ typedef struct coord {
 
 typedef point vector;
 
-typedef struct circ {
+typedef struct circle {
 	point c;
 	int r;
 } circle;
@@ -16,16 +16,16 @@ typedef struct rect {
 	point corners[4];
 } rect;
 
-void new_circle(circle *c, point center, int radius) {
-	c->c.x = center.x;
-	c->c.y = center.y;
-	c->r = radius + ROBOTR;
+void new_circle(circle *circ, point center, int radius) {
+	circ->c.x = center.x;
+	circ->c.y = center.y;
+	circ->r = radius + ROBOTR;
 }
 
-void drawCircle(circle c) {
-	for (int angle = 0; a < 360; a += 10) {
-		int x = c.x + (int)(round(c.r * cosDegrees(a)));
-		int y = c.y + (int)(round(c.r * sinDegrees(a)));
+void draw_circle(circle circ) {
+	for (int a = 0; a < 360; a += 10) {
+		int x = circ.c.x + (int)(round(circ.r * cosDegrees(a)));
+		int y = circ.c.y + (int)(round(circ.r * sinDegrees(a)));
 		setPixel(x, y);
 	}
 }
@@ -61,25 +61,24 @@ void new_rect(rect *r, point *ps) {
 	}
 }
 
-void drawRect(rect r) {
-	point corners[4] = r.corners;
-	const int res1, res2;
+void draw_rect(rect r) {
+	const int res1 = 6;
+	const int res2 = 24;
 	int x, y;
-	res1 = 6;	res2 = 24;
 	for (int i = 0; i <= res1; i++) {
-		x = (corners[1].x - corners[0].x) * i / res1 + corners[0].x;
-		y = (corners[1].y - corners[0].y) * i / res1 + corners[0].x;
+		x = (r.corners[1].x - r.corners[0].x) * i / res1 + r.corners[0].x;
+		y = (r.corners[1].y - r.corners[0].y) * i / res1 + r.corners[0].x;
 		setPixel(x, y);
-		x = (corners[3].x - corners[2].x) * i / res1 + corners[2].x;
-		y = (corners[3].y - corners[2].y) * i / res1 + corners[2].y;
+		x = (r.corners[3].x - r.corners[2].x) * i / res1 + r.corners[2].x;
+		y = (r.corners[3].y - r.corners[2].y) * i / res1 + r.corners[2].y;
 		setPixel(x, y);
 	}
 	for (int i = 0; i <= res2; i++) {
-		x = (corners[2].x - corners[1].x) * i / res2 + corners[1].x;
-		y = (corners[2].y - corners[1].y) * i / res2 + corners[1].y;
+		x = (r.corners[2].x - r.corners[1].x) * i / res2 + r.corners[1].x;
+		y = (r.corners[2].y - r.corners[1].y) * i / res2 + r.corners[1].y;
 		setPixel(x, y);
-		x = (corners[0].x - corners[3].x) * i / res2 + corners[3].x;
-		y = (corners[0].y - corners[3].x) * i / res2 + corners[3].y;
+		x = (r.corners[0].x - r.corners[3].x) * i / res2 + r.corners[3].x;
+		y = (r.corners[0].y - r.corners[3].x) * i / res2 + r.corners[3].y;
 		setPixel(x, y);
 	}
 }
