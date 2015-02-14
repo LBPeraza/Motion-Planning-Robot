@@ -1,5 +1,8 @@
 #define ROBOTR 3
 
+#define RCOUNT 7
+#define CCOUNT 3
+
 typedef struct coord {
 	float x;
 	float y;
@@ -15,6 +18,9 @@ typedef struct circle {
 typedef struct rect {
 	point corners[4];
 } rect;
+
+rect rectObstacles[RCOUNT]; // 3 rectangles and the outer walls
+circle circleObstacles[CCOUNT];
 
 void new_circle(circle *circ, point center, int radius) {
 	circ->c.x = center.x;
@@ -150,4 +156,14 @@ bool circle_intersect(point p1, point p2, circle c){
 		return true;
 	}
 	return false;
+}
+
+bool safe_path(point s, point e) {
+	for (int i = 0; i < RCOUNT; i++)
+		if (rectangle_intersect(s, e, rectObstacles[i]))
+			return false;
+	for (int i = 0; i < CCOUNT; i++)
+		if (circle_intersect(s, e, circleObstacles[i]))
+			return false;
+	return true;
 }

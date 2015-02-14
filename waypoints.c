@@ -15,14 +15,14 @@ typedef struct pt {
 	float y;
 } point;
 
+bool safe_path(point wp1, point wp2) {
+	return true;
+}
 
 #endif
 
 typedef point waypoint;
 
-bool safe_path(point wp1, point wp2) {
-	return true;
-}
 #define WPCOUNT 6
 
 bool waypoint_defined[WPCOUNT];
@@ -104,5 +104,10 @@ void draw_paths() {
 	for (int i = 0; i < WPCOUNT; i++) {
 		if (waypoint_defined[i])
 			drawCircle(waypoints[i].x - 2, waypoints[i].y + 2, 4);
+		for (int j = i+1; j < WPCOUNT; j++) {
+			if (edges[i][j] >= 0) {
+				drawLine(waypoints[i].x, waypoints[i].y, waypoints[j].x, waypoints[j].y);
+			}
+		}
 	}
 }

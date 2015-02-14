@@ -26,15 +26,12 @@
 float robot_TH = 0.0;
 point robot_c, marker_c, marker_d;
 float marker_vd, marker_wd;
-int oldL = 0, oldR = 0, oldT = 0;
+int oldL = 0, oldR = 0, oldT;
 int velocityUpdateInterval = 20;
 int PIDUpdateInterval = 2;
 
 float kp;
 float l;
-
-rect rectObstacles[7]; // 3 rectangles and the outer walls
-circle circleObstacles[3];
 
 float max(float a, float b){
 	if(a > b)
@@ -148,7 +145,6 @@ task trajectory_task()
 		float vl = (leftEnc - oldL) / dt * PI / 180.0 * R;
 		float vr = (rightEnc - oldR) / dt * PI / 180.0 * R;
 
-		float vmax = max(abs(vr), abs(vl));
 		float v = (vr + vl) / 2.0;
 
 		float w = (vr - vl) / l;
@@ -238,6 +234,44 @@ void clearExtraPixels() {
 			clearPixel(j, i);
 }
 
+void drawMap() {
+	for (int i = 0; i < CCOUNT; i++) {
+		draw_circle(circleObstacles[i]);
+	}
+	for (int i = 0; i < RCOUNT; i++) {
+		draw_rect(rectObstacles[i]);
+	}
+}
+
+task closeWaypoint() {
+	int leftEnc = nMotorEncoder[LeftMotor];
+	int rightEnc = nMotorEncoder[RightMotor];
+	int oldL = leftEnc;
+	int oldR = rightEnc;
+	point c;
+	c.x = 6; c.y = 6;
+	point e;
+	e.x = 6; e.y = 6;
+	while (1) {
+		eraseLine(c.x, c.y, e.x, e.y);
+		leftEnc = nMotorEncoder[LeftMotor];
+		rightEnc = nMotorEncoder[RightMotor];
+		int xdiff = leftEnc - oldL;
+		int ydiff = rightEnc - oldR;
+		c.x += xdiff;
+		c.y += ydiff;
+		displayTextLine(0, "%d, %d", c.x, c.y);
+		int cw = closest_waypoint(c);
+		if (cw >= 0) {
+			if (waypoint_location(&e, cw)) {
+				drawLine(c.x, c.y, e.x, e.y);
+			}
+		}
+		oldL = leftEnc;
+		oldR = rightEnc;
+		wait1Msec(50);
+	}
+}
 
 /*****************************************
  * Main function - it is not necessary to
@@ -258,18 +292,14 @@ task main()
 	initObstacles();
 	initWaypoints();
 
-	drawRect(0, 48, 96, 0);
-	for (int i = 0; i < 3; i++) {
-		draw_circle(circleObstacles[i]);
-	}
-	for (int i = 0; i < 7; i++) {
-		draw_rect(rectObstacles[i]);
-	}
+	drawMap();
 
 	clearExtraPixels();
 
 	if (SOUND_ON)
 		startTask(speedSounds);
+
+	startTask(closeWaypoint);
 
 	while(nNxtButtonPressed != kExitButton) {}
 }
