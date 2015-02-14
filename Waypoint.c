@@ -297,5 +297,10 @@ task main()
 	//startTask(closeWaypoint);
 	int path[6];
 	int pathLen = get_path(path,0,5);
+	for(int i = 0; i<pathLen; i++){
+		nxtDisplayTextLine(i, "%d", path[i]);
+	}
 	while(nNxtButtonPressed != kExitButton) {}
 }
+//0  1       3      2     4      5
+//0  30.07  61.21  72.03  81.46  123.46

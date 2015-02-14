@@ -129,31 +129,45 @@ int get_path(int *path, const int wps, const int wpe) {
 		return -1;
 	}
 	float scores[WPCOUNT];
-	for (int i = 0; i < WPCOUNT; i++)
+	bool visited[WPCOUNT];
+	int parent[WPCOUNT];
+	for (int i = 0; i < WPCOUNT; i++){
 		scores[i] = -1.0;
+		visited[i] = false;
+		parent[i] = -1;
+	}
 	scores[wpe] = 0.0;
+	int current = wpe;
 	int buf[WPCOUNT];
 	int n;
-	while (scores[wps] < 0.0) {
-		for (int i = 0; i < WPCOUNT; i++) {
-			if (waypoint_defined[i] && scores[i] >= 0.0) {
-				float score = scores[i];
-				n = get_neighbors(buf, i);
-				for (int j = 0; j < n; j++) {
-					float newScore = score + edges[i][buf[j]];
-					if(scores[buf[j]] < 0 || newScore < scores[buf[j]]){
-						scores[buf[j]] = newScore;
-					}
-				}
+	while (!visited[wps]) {
+		n = get_neighbors(buf, current);
+		float score = scores[current];
+		for (int j = 0; j < n; j++) {
+			float newScore = score + edges[current][buf[j]];
+			if(!visited[buf[j]] && (scores[buf[j]] < 0 || newScore < scores[buf[j]])){
+				scores[buf[j]] = newScore;
+				parent[buf[j]] = current;
 			}
 		}
+		visited[current] = true;
+
+		int shortestInd = -1;
+		float shortestDist = -1.0;
+		for(int j = 0; j < WPCOUNT; j++){
+			if(scores[j] != -1 && !visited[j] && (shortestDist < 0 || scores[j] < shortestDist)){
+				shortestDist = scores[j];
+				shortestInd = j;
+			}
+		}
+		current = shortestInd;
 	}
+
 	int i = wps;
 	int count = 0;
 	while (i != wpe) {
 		path[count++] = i;
-		n = get_neighbors(buf, i);
-		i = min_score(scores, buf, n);
+		i = parent[i];
 	}
 	path[count++] = i;
 	return count;
