@@ -206,9 +206,9 @@ task trajectory_task()
 		float wtf;
 		displayTextLine(0, "%0.2f", weight);
 		if (weight < 0.09 || weight > 0.91)
-			wtf = inc >= -0.02 ? 1.0 : 1.092;
+			wtf = inc >= -0.02 ? 1.0 : 1.096;
 		else
-			wtf = 1.0;//inc >= -0.02 ? 1.0 : 0.975;
+			wtf = inc >= -0.02 ? 1.0 : 0.98;
 		robot_TH += inc * wtf;
 
 		ref_c.x = robot_c.x + F * cos(robot_TH);
@@ -304,15 +304,6 @@ void getInput() {
 		oldL = leftEnc;
 		wait1Msec(50);
 	}
-	inputs[0] = 6;
-	inputs[1] = 12;
-	inputs[2] = 0;
-	inputs[3] = 12;
-	inputs[4] = 42;
-	//inputs[3] = 12;
-	//inputs[4] = 42;
-	//inputs[3] = 42;
-	//inputs[4] = 6;
 	Start.x = inputs[0];
 	Start.y = inputs[1];
 	ref_c.x = Start.x;
