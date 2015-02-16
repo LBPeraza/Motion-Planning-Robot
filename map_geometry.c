@@ -1,4 +1,4 @@
-#define ROBOTR 3
+#define ROBOTR 4.5
 
 #define RCOUNT 7
 #define CCOUNT 3

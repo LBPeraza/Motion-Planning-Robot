@@ -11,8 +11,12 @@
 #define SOUND_ON 0
 #define CHOOSE_K 0
 
-#define R 1.08
-#define L 4.48
+#define R 1.1
+#define L 4.64
+//#define R 0.83
+//#define L 4.34
+//#define ABC .2325
+//#define L (1.0/ABC)
 #define F -2.0
 
 #define K 7.0
@@ -22,15 +26,17 @@
 #define MAPWIDTH 96
 #define MAPHEIGHT 48
 
-#define TIME 25.0
-
+//#define SPEED 4.94
+#define SPEED 5.5
+#define TIME(dist) (dist/SPEED)
 
 float robot_TH = 0.0;
 point robot_c, ref_c, ref_d;
 float ref_vd, ref_wd;
 int oldL = 0, oldR = 0, oldT;
-int velocityUpdateInterval = 20;
+int velocityUpdateInterval = 15;
 int PIDUpdateInterval = 2;
+float weight;
 
 int path[WPCOUNT];
 int pathLen = -1;
@@ -108,7 +114,7 @@ void initObstacles() {
  * Initiate waypoints
  *****************************************/
 void updateDesired(float t){
-	float percent = t/TIME;
+	float percent = t/(TIME(totalDist));
 	float dist_d = percent * totalDist;
 	float dis = 0.0;
 	int cur = 0;
@@ -123,7 +129,9 @@ void updateDesired(float t){
 		ref_d.y = a.y;
 		return;
 	}
-	float weight = (dist_d - dis) / (edges[path[cur]][path[cur+1]]);
+	weight = (dist_d - dis) / (edges[path[cur]][path[cur+1]]);
+	//float fx = 1.155 * (weight - 0.5);
+	//weight = -1.299 * (pow(fx, 3) - fx) + 0.5;
 	point a, b;
 	waypoint_location(&a, path[cur]);
 	waypoint_location(&b, path[cur+1]);
@@ -135,13 +143,14 @@ void initWaypoints(point s, point e) {
 	initWaypoint();
 
 	new_waypoint(12, 6, 0);
-	new_waypoint(42, 4, 1);
-	new_waypoint(84, 4, 2);
-	new_waypoint(65, 25, 3);
+	new_waypoint(42, 6, 1);
+	new_waypoint(84, 6, 2);
+	new_waypoint(62, 27, 3);
 	new_waypoint(54, 42, 4);
 	new_waypoint(12, 42, 5);
 	new_waypoint(s.x, s.y, 6);
 	new_waypoint(e.x, e.y, 7);
+	new_waypoint(27, 6, 8);
 
 	connect_waypoints();
 
@@ -193,7 +202,14 @@ task trajectory_task()
 
 		robot_c.x += dt/6.0 * (k00 + 2*(k10 + k20) + k30);
 		robot_c.y += dt/6.0 * (k01 + 2*(k11 + k21) + k31);
-		robot_TH += dt/6.0 * (k02 + 2*(k12 + k22) + k32);
+		float inc = dt/6.0 * (k02 + 2*(k12 + k22) + k32);
+		float wtf;
+		displayTextLine(0, "%0.2f", weight);
+		if (weight < 0.09 || weight > 0.91)
+			wtf = inc >= -0.02 ? 1.0 : 1.092;
+		else
+			wtf = 1.0;//inc >= -0.02 ? 1.0 : 0.975;
+		robot_TH += inc * wtf;
 
 		ref_c.x = robot_c.x + F * cos(robot_TH);
 		ref_c.y = robot_c.y + F * sin(robot_TH);
@@ -211,7 +227,7 @@ task trajectory_task()
 		motor[motorC] = 0.1 * vrd;
 
 		//Code that plots the robot's current position and also prints it out as text
-		displayTextLine(0, "X: %f", ref_c.x);
+		/*displayTextLine(0, "X: %f", ref_c.x);
 		displayTextLine(1, "Y: %f", ref_c.y);
 		displayTextLine(2, "xd: %f", ref_d.x);
 		displayTextLine(3, "yd: %f", ref_d.y);
@@ -219,7 +235,7 @@ task trajectory_task()
 		displayTextLine(5, "x: %f", xErr);
 		displayTextLine(6, "y: %f", yErr);
 		displayTextLine(6, "time: %f", t);
-
+		*/
 		wait1Msec(velocityUpdateInterval);
 		oldL = leftEnc;
 		oldR = rightEnc;
@@ -289,10 +305,14 @@ void getInput() {
 		wait1Msec(50);
 	}
 	inputs[0] = 6;
-	inputs[1] = 6;
+	inputs[1] = 12;
 	inputs[2] = 0;
 	inputs[3] = 12;
-	inputs[4] = 36;
+	inputs[4] = 42;
+	//inputs[3] = 12;
+	//inputs[4] = 42;
+	//inputs[3] = 42;
+	//inputs[4] = 6;
 	Start.x = inputs[0];
 	Start.y = inputs[1];
 	ref_c.x = Start.x;

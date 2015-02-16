@@ -23,7 +23,7 @@ bool safe_path(point wp1, point wp2) {
 
 typedef point waypoint;
 
-#define WPCOUNT 8
+#define WPCOUNT 9
 
 float totalDist = 0.0;
 
